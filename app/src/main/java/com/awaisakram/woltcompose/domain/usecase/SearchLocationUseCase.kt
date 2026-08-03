@@ -10,7 +10,7 @@ class SearchLocationUseCase @Inject constructor(
 
     suspend operator fun invoke(
         query: String,
-    ): Location {
+    ): Result<Location> {
         return repository.search(query)
     }
 }

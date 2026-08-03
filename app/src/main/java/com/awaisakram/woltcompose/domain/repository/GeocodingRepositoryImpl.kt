@@ -12,10 +12,12 @@ class GeocodingRepositoryImpl @Inject constructor(
 
     override suspend fun search(
         query: String,
-    ): Location {
+    ): Result<Location> {
 
-        return api.search(query)
-            .first()
-            .toDomain()
+        return runCatching {
+            api.search(query)
+                .first()
+                .toDomain()
+        }
     }
 }
