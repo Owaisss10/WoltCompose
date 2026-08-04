@@ -1,7 +1,7 @@
 package com.awaisakram.woltcompose.di
 
-import com.awaisakram.woltcompose.data.repository.GeocodingRepositoryImpl
-import com.awaisakram.woltcompose.domain.repository.GeocodingRepository
+import com.awaisakram.woltcompose.data.repository.CityRepositoryImpl
+import com.awaisakram.woltcompose.domain.repository.CityRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -14,7 +14,7 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindGeocodingRepository(
-        repository: GeocodingRepositoryImpl,
-    ): GeocodingRepository
+    abstract fun bindCityRepository(
+        repository: CityRepositoryImpl,
+    ): CityRepository
 }
