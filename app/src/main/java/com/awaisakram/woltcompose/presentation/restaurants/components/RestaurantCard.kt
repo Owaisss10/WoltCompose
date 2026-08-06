@@ -66,7 +66,7 @@ fun RestaurantCard(
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.Center,
-                    ) {
+                ) {
 
                     Text(
                         text = restaurant.name,

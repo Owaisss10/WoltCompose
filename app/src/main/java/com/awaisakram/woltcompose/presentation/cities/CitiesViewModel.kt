@@ -1,9 +1,7 @@
 package com.awaisakram.woltcompose.presentation.cities
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.awaisakram.woltcompose.domain.model.City
 import com.awaisakram.woltcompose.domain.usecase.GetCitiesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

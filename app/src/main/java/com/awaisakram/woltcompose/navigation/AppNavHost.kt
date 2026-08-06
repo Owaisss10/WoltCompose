@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.awaisakram.woltcompose.domain.model.City
 import com.awaisakram.woltcompose.presentation.cities.CitiesScreen
 import com.awaisakram.woltcompose.presentation.restaurants.RestaurantsScreen
 

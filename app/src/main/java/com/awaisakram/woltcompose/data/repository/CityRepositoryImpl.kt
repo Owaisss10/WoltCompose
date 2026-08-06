@@ -1,7 +1,7 @@
 package com.awaisakram.woltcompose.data.repository
 
-import com.awaisakram.woltcompose.data.remote.mapper.toDomain
 import com.awaisakram.woltcompose.data.remote.api.CitiesApi
+import com.awaisakram.woltcompose.data.remote.mapper.toDomain
 import com.awaisakram.woltcompose.domain.model.City
 import com.awaisakram.woltcompose.domain.repository.CityRepository
 import javax.inject.Inject
