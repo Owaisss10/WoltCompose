@@ -4,6 +4,8 @@ import com.awaisakram.woltcompose.domain.model.Restaurant
 
 interface RestaurantRepository {
 
-    suspend fun getRestaurants(): List<Restaurant>
-
+    suspend fun getRestaurants(
+        latitude: Double,
+        longitude: Double,
+    ): List<Restaurant>
 }

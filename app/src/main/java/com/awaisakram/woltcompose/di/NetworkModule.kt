@@ -83,4 +83,5 @@ object NetworkModule {
         @WoltRetrofit retrofit: Retrofit,
     ): CitiesApi =
         retrofit.create(CitiesApi::class.java)
+
 }

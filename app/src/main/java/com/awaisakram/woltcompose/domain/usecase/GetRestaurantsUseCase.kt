@@ -8,7 +8,13 @@ class GetRestaurantsUseCase @Inject constructor(
     private val repository: RestaurantRepository,
 ) {
 
-    suspend operator fun invoke(): List<Restaurant> {
-        return repository.getRestaurants()
+    suspend operator fun invoke(
+        latitude: Double,
+        longitude: Double,
+    ): List<Restaurant> {
+        return repository.getRestaurants(
+            latitude = latitude,
+            longitude = longitude,
+        )
     }
 }
