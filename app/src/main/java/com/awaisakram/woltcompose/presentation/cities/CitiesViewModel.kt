@@ -60,11 +60,4 @@ class CitiesViewModel @Inject constructor(
             it.copy(query = query)
         }
     }
-
-    fun onCityClicked(city: City) {
-        Log.d(
-            "CitiesViewModel",
-            "Selected city=${city.name}, lat=${city.latitude}, lon=${city.longitude}"
-        )
-    }
 }

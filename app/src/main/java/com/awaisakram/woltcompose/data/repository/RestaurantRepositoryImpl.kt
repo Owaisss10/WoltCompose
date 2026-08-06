@@ -24,8 +24,13 @@ class RestaurantRepositoryImpl @Inject constructor(
             it.template == "venue-vertical-list"
         } ?: return emptyList()
 
+
+
         return venueSection.items
-            .mapNotNull { it.venue }
-            .map { it.toDomain() }
+            .mapNotNull { item ->
+                item.venue?.toDomain(
+                    imageUrl = item.image?.url.orEmpty()
+                )
+            }
     }
 }

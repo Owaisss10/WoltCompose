@@ -3,7 +3,7 @@ package com.awaisakram.woltcompose
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.awaisakram.woltcompose.presentation.cities.CitiesScreen
+import com.awaisakram.woltcompose.navigation.AppNavHost
 import com.awaisakram.woltcompose.presentation.theme.WoltComposeTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -15,7 +15,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             WoltComposeTheme {
-                CitiesScreen()
+                AppNavHost()
             }
         }
     }

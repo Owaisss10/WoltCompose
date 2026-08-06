@@ -6,4 +6,7 @@ data class Restaurant(
     val description: String,
     val imageUrl: String,
     val deliveryTime: String,
+    val priceRange: Int?,
+    val tags: List<String>,
+    val address: String?,
 )

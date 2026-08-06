@@ -1,10 +1,14 @@
 plugins {
     alias(libs.plugins.android.application)
+    (libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("kotlin-parcelize")
 
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt)
+
+
 }
 
 android {
@@ -64,4 +68,5 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.coil.compose)
 }

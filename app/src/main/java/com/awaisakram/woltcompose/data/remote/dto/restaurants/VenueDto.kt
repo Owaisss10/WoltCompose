@@ -15,9 +15,15 @@ data class VenueDto(
     @SerialName("short_description")
     val description: String = "",
 
-    @SerialName("estimate")
+    @SerialName("estimate_range")
     val estimate: String = "",
 
-    @SerialName("image")
-    val image: VenueImageDto? = null,
+    @SerialName("address")
+    val address: String = "",
+
+    @SerialName("price_range")
+    val priceRange: Int? = null,
+
+    @SerialName("tags")
+    val tags: List<String> = emptyList(),
 )
