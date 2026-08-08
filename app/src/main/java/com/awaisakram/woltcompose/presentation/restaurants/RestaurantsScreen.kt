@@ -21,23 +21,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import com.awaisakram.woltcompose.domain.model.City
+import com.awaisakram.woltcompose.navigation.RestaurantsRoute
 import com.awaisakram.woltcompose.presentation.components.SearchTextField
 import com.awaisakram.woltcompose.presentation.restaurants.components.RestaurantCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RestaurantsScreen(
-    navController: NavController,
-    city: City,
+    route: RestaurantsRoute,
     viewModel: RestaurantsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
 
-    LaunchedEffect(city) {
-        viewModel.loadRestaurants(city)
+    LaunchedEffect(route) {
+        viewModel.loadRestaurants(
+            latitude = route.latitude,
+            longitude = route.longitude,
+        )
     }
 
 
@@ -47,7 +48,7 @@ fun RestaurantsScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = city.name,
+                        text = route.cityName,
                     )
                 },
             )

@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.awaisakram.woltcompose.presentation.cities.CitiesScreen
 import com.awaisakram.woltcompose.presentation.restaurants.RestaurantsScreen
 
@@ -14,31 +15,27 @@ fun AppNavHost() {
 
     NavHost(
         navController = navController,
-        startDestination = Destination.Cities.route,
+        startDestination = CitiesRoute,
     ) {
 
-        composable(Destination.Cities.route) {
+        composable<CitiesRoute> {
             CitiesScreen(
-                navController = navController,
+                onCityClick = { city ->
+                    navController.navigate(
+                        RestaurantsRoute(
+                            cityName = city.name,
+                            latitude = city.latitude,
+                            longitude = city.longitude,
+                        )
+                    )
+                },
             )
         }
 
-        composable(Destination.Restaurants.route) {
-
-            val city = navController.getSelectedCity()
-
-            if (city != null) {
-                RestaurantsScreen(
-                    navController = navController,
-                    city = city,
-                )
-            } else {
-                navController.popBackStack()
-            }
-        }
-
-        composable(Destination.RestaurantDetails.route) {
-            // We'll implement this later
+        composable<RestaurantsRoute> { backStackEntry ->
+            RestaurantsScreen(
+                route = backStackEntry.toRoute<RestaurantsRoute>(),
+            )
         }
     }
 }

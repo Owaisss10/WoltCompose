@@ -21,30 +21,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
-import com.awaisakram.woltcompose.navigation.Destination
-import com.awaisakram.woltcompose.navigation.setSelectedCity
+import com.awaisakram.woltcompose.domain.model.City
 import com.awaisakram.woltcompose.presentation.components.SearchTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CitiesScreen(
-    navController: NavHostController,
+    onCityClick: (City) -> Unit,
     viewModel: CitiesViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    val filteredCities = uiState.cities
-        .filter {
-            it.name.contains(
-                uiState.query,
-                ignoreCase = true,
-            )
-        }
-        .sortedBy {
-            it.name
-        }
-
 
     Scaffold(
         topBar = {
@@ -81,7 +67,7 @@ fun CitiesScreen(
 
 
             Text(
-                text = "Showing ${filteredCities.size} of ${uiState.cities.size} cities",
+                text = "Showing ${uiState.cities.size} of ${uiState.totalCityCount} cities",
                 style = MaterialTheme.typography.bodyLarge,
             )
 
@@ -92,7 +78,7 @@ fun CitiesScreen(
             ) {
 
                 items(
-                    items = filteredCities,
+                    items = uiState.cities,
                     key = { it.id },
                 ) { city ->
 
@@ -101,14 +87,7 @@ fun CitiesScreen(
                         style = MaterialTheme.typography.headlineSmall,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable {
-
-                                navController.setSelectedCity(city)
-
-                                navController.navigate(
-                                    Destination.Restaurants.route
-                                )
-                            }
+                            .clickable { onCityClick(city) }
                             .padding(vertical = 12.dp),
                     )
                 }

@@ -2,10 +2,10 @@ package com.awaisakram.woltcompose.presentation.restaurants
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.awaisakram.woltcompose.domain.model.City
 import com.awaisakram.woltcompose.domain.model.Restaurant
 import com.awaisakram.woltcompose.domain.usecase.GetRestaurantsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,7 +25,10 @@ class RestaurantsViewModel @Inject constructor(
         _uiState.asStateFlow()
 
 
-    fun loadRestaurants(city: City) {
+    fun loadRestaurants(
+        latitude: Double,
+        longitude: Double,
+    ) {
 
         viewModelScope.launch {
 
@@ -36,8 +39,8 @@ class RestaurantsViewModel @Inject constructor(
             try {
 
                 val restaurants = getRestaurantsUseCase(
-                    latitude = city.latitude,
-                    longitude = city.longitude
+                    latitude = latitude,
+                    longitude = longitude,
                 )
 
                 allRestaurants = restaurants
@@ -45,6 +48,12 @@ class RestaurantsViewModel @Inject constructor(
                 _uiState.value = RestaurantsUiState(
                     restaurants = restaurants
                 )
+
+            } catch (exception: CancellationException) {
+
+                // Cancellation is not a failure — it must propagate so that
+                // structured concurrency stays intact.
+                throw exception
 
             } catch (exception: Exception) {
 
