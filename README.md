@@ -1,6 +1,6 @@
 # WoltCompose
 
-> A Jetpack Compose learning project focused on building a modern Android application using Clean Architecture, Material 3, and best practices.
+> An Android app built with Jetpack Compose and Clean Architecture: pick a city, browse the restaurants delivering there.
 
 | City Selection | City Search | Restaurant List | Restaurant Search |
 |:--------------:|:-----------:|:---------------:|:-----------------:|
@@ -10,305 +10,180 @@
 
 ## Overview
 
-WoltCompose is a learning project created to practice modern Android development with **Jetpack Compose** while following a production-inspired architecture. Instead of building a simple demo app, the goal was to structure the project in a way that resembles a real application, making it easier to extend with new features in the future.
+The app loads Wolt's public city list, lets you search it, and then queries the restaurants
+available at the selected city's coordinates.
 
-The application loads a list of available cities, allows the user to search for a city, and then displays restaurants available in the selected location using the city's latitude and longitude.
-
-Although the application is intentionally small, the project emphasizes maintainability, separation of concerns, reusable UI components, and scalable navigation patterns.
-
----
-
-## Goals
-
-The primary goals of this project are:
-
-- Learn Jetpack Compose
-- Learn modern Android architecture
-- Practice Clean Architecture principles
-- Build reusable Compose components
-- Use dependency injection with Hilt
-- Consume REST APIs with Retrofit
-- Apply proper state management
-- Keep the project scalable for future features
-
----
-
-## Features
-
-### City Selection
-
-The application starts by loading all supported cities from the API.
-
-Users can:
-
-- Browse available cities
-- Search cities instantly
-- Select a city to continue
-
-Cities are sorted alphabetically to improve usability.
-
----
-
-### Restaurant Listing
-
-After selecting a city, the application's navigation passes the selected city object to the next screen.
-
-Using the city's:
-
-- Latitude
-- Longitude
-
-the application requests restaurants available in that specific location.
-
-Each restaurant card displays:
-
-- Restaurant image
-- Name
-- Description
-- Delivery estimate
-- Address
-- Categories
-
----
-
-### Restaurant Search
-
-Restaurants can be filtered instantly using a local search.
-
-Searching currently works against:
-
-- Restaurant name
-- Restaurant categories
-
-This provides an instant experience without making additional network requests.
+It is deliberately small in feature scope. The interesting part is the structure: how state is
+owned and derived, how the layers are separated, and which trade-offs were made where. Those
+decisions are documented below, including the ones that are still open.
 
 ---
 
 ## Architecture
 
-The project follows a simplified version of **Clean Architecture**.
-
 ```
-Presentation
-│
-├── Screens
-├── Components
-├── ViewModels
-└── UiState
-
-Domain
-│
-├── Models
-├── Repository Interfaces
-└── Use Cases
-
-Data
-│
-├── API
-├── DTOs
-├── Mappers
-├── Repository Implementations
-└── Network
+Presentation ──▶ Domain ◀── Data
 ```
 
-### Why Clean Architecture?
-
-Although this application is relatively small, following Clean Architecture helps keep responsibilities separated.
-
-Benefits include:
-
-- Easier testing
-- Better maintainability
-- Easier feature additions
-- Clear separation between UI and business logic
-- Reduced coupling between layers
-
----
-
-## Project Structure
+The domain layer is pure Kotlin with no Android or networking dependencies. It defines the
+models and the repository interfaces. The data layer implements those interfaces and owns
+everything about the transport: Retrofit, DTOs, and the mapping to domain models. The
+presentation layer depends only on the domain.
 
 ```
 app
 ├── data
-│   ├── remote
-│   ├── mapper
-│   ├── dto
-│   └── repository
+│   ├── remote        API interfaces, DTOs, mappers
+│   └── repository    repository implementations
 │
 ├── domain
-│   ├── model
-│   ├── repository
-│   └── usecase
+│   ├── model         City, Restaurant
+│   ├── repository    interfaces the data layer implements
+│   └── usecase       entry points for the presentation layer
 │
 ├── presentation
-│   ├── cities
-│   ├── restaurants
-│   ├── components
-│   └── navigation
+│   ├── cities        screen, ViewModel, UI state
+│   ├── restaurants   screen, ViewModel, UI state
+│   └── components    shared Compose components
 │
-└── di
+├── navigation
+└── di                Hilt modules
 ```
 
----
-
-## Navigation
-
-The project uses **Jetpack Navigation Compose**.
-
-Current navigation flow:
-
-```
-Choose City
-      │
-      ▼
-Restaurants
-```
-
-Instead of passing primitive values between destinations, the selected `City` object is passed through the navigation back stack using `SavedStateHandle`.
-
-This approach was chosen because:
-
-- It keeps navigation simple
-- No unnecessary route arguments
-- Type-safe access to the selected city
-- Easy to extend as the application grows
+DTOs never leave the data layer. A change to the shape of Wolt's JSON is absorbed by the
+mappers and cannot ripple into the UI.
 
 ---
 
-## State Management
+## Key decisions
 
-Each screen owns its own ViewModel.
+### Navigation carries its own arguments
 
-The UI observes immutable state objects using `StateFlow`.
+Destinations are `@Serializable` route types rather than string constants:
 
-```
-ViewModel
-      │
-      ▼
-UiState
-      │
-      ▼
-Composable UI
+```kotlin
+@Serializable
+data class RestaurantsRoute(
+    val cityName: String,
+    val latitude: Double,
+    val longitude: Double,
+)
 ```
 
-This creates a single source of truth and keeps the UI reactive.
+An earlier version passed the selected `City` object between screens by writing it into the
+back stack entry's `SavedStateHandle` and reading it back from `previousBackStackEntry`. That
+was a real bug, not just an aesthetic one: while a back navigation is in progress the
+destination is still composed but `previousBackStackEntry` no longer points where it did, so
+the lookup returned null, the null-guard called `popBackStack()`, and it popped the *cities*
+screen — leaving an empty back stack and a white screen.
 
----
+A destination that owns its arguments has no such window. It is also restorable after process
+death, which the previous approach was not.
 
-## Reusable Components
+### Screens do not receive a NavController
 
-To avoid duplicated UI code, reusable Compose components were created.
+Composables take callbacks (`onCityClick: (City) -> Unit`) rather than a `NavController`. The
+screens have no knowledge of navigation, which keeps them previewable and testable in
+isolation, and keeps all routing decisions in one file.
 
-Examples include:
+### State is derived, never stored twice
 
-- SearchTextField
+`CitiesViewModel` holds the loaded cities, the query, and the load status as separate sources
+of truth, and derives the visible list from them:
 
-The search component is shared between:
-
-- City search
-- Restaurant search
-
-This keeps styling and behaviour consistent throughout the application.
-
----
-
-## Networking
-
-The project uses:
-
-- Retrofit
-- Kotlin Serialization
-- OkHttp
-- Hilt
-
-Network models are mapped into domain models before reaching the presentation layer.
-
-```
-API
-
-↓
-
-DTO
-
-↓
-
-Mapper
-
-↓
-
-Domain Model
-
-↓
-
-UI
+```kotlin
+val uiState: StateFlow<CitiesUiState> =
+    combine(cities, query, isLoading, error) { cities, query, isLoading, error ->
+        CitiesUiState(
+            cities = cities.filter { it.name.contains(query, ignoreCase = true) },
+            totalCityCount = cities.size,
+            ...
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CitiesUiState())
 ```
 
-This prevents the UI from depending directly on API responses.
+Filtering previously ran inside the composable, which meant all 958 cities were filtered *and
+re-sorted* on every recomposition. Sorting now happens once, when the data arrives.
+
+### Cancellation is not an error
+
+Both ViewModels rethrow `CancellationException` before their general error handler:
+
+```kotlin
+} catch (exception: CancellationException) {
+    throw exception
+} catch (exception: Exception) {
+    // report to the user
+}
+```
+
+Catching a bare `Exception` in a coroutine also catches cancellation, so leaving a screen
+mid-request would surface an error message for what is simply structured concurrency doing
+its job.
 
 ---
 
-## UI
+## Testing
 
-The project uses Material 3 components throughout.
+20 unit tests, runnable on the JVM with no device:
 
-Current UI features include:
+```bash
+./gradlew testDebugUnitTest
+```
 
-- Material 3 Top App Bars
-- Scaffold layouts
-- Search fields
-- Restaurant cards
-- Loading states
-- Error states
-- Empty states
+| Suite | Covers |
+|---|---|
+| `CitiesViewModelTest` | sorting, loading, case-insensitive filtering, total-count preservation, error handling, cancellation |
+| `RestaurantsViewModelTest` | coordinate forwarding, loading, filtering by name and tag, clearing, error handling, cancellation |
+| `RestaurantRepositoryImplTest` | selecting the venue section, skipping malformed items, image source, missing section |
+| `CityMapperTest` | GeoJSON `[longitude, latitude]` ordering |
 
-The UI intentionally focuses on clean layouts while remaining easy to extend later.
+Repositories are replaced with hand-written fakes rather than a mocking framework. Each fake
+completes through a `CompletableDeferred` that the test controls, so intermediate states such
+as "loading" are observable instead of racing to completion.
 
----
-
-## Technologies
-
-- Kotlin
-- Jetpack Compose
-- Material 3
-- Navigation Compose
-- Hilt
-- Retrofit
-- Kotlin Serialization
-- Coil
-- StateFlow
-- Coroutines
+`MainDispatcherRule` swaps `Dispatchers.Main` for a `StandardTestDispatcher`, which is what
+makes `viewModelScope` testable off-device.
 
 ---
 
-## Future Improvements
+## Tech stack
 
-Some ideas planned for future iterations include:
-
-- Restaurant details screen
-- Favorites
-- Better animations
-- Pull-to-refresh
-- Offline caching
-- Pagination
-- Dark theme improvements
-- Unit tests
-- UI tests
-- CI/CD pipeline
-- Detekt
-- Spotless / ktlint
+Kotlin · Jetpack Compose · Material 3 · Navigation Compose (type-safe routes) · Hilt ·
+Retrofit · Kotlin Serialization · Coil · Coroutines & Flow · JUnit4 · Turbine
 
 ---
 
-## Why This Project?
+## Known limitations
 
-The purpose of WoltCompose is not to recreate the Wolt application, but to build a realistic Android project while learning modern Android development.
+Tracked deliberately rather than left undocumented:
 
-The project intentionally prioritizes:
+- **Errors reach the UI as raw exception messages.** They should be mapped to a sealed error
+  type in the data layer and resolved to string resources in the UI. As written they are not
+  localizable and can leak transport detail.
+- **The two search screens use different patterns.** Cities derives its filtered list through
+  `combine`; Restaurants still keeps a mutable `allRestaurants` field and writes the filtered
+  result back into state. Cities is the pattern worth keeping.
+- **`RestaurantsUiState` can represent illegal states** — loading, error, and content are
+  independent fields. A sealed interface would make the impossible combinations
+  unrepresentable.
+- **Restaurant loading is triggered from the UI** via `LaunchedEffect`, rather than the
+  ViewModel reading its arguments from `SavedStateHandle`.
+- **UI strings are hardcoded** rather than in `strings.xml`, so the app is not localizable.
+- **No Compose previews**, and no screenshot or instrumentation tests.
+- **No CI, ktlint, or detekt.**
+- **Release builds have R8 disabled** and log full HTTP bodies; body logging should be gated
+  on `BuildConfig.DEBUG`.
+- **Accessibility is unfinished** — the delivery estimate and price range are rendered as an
+  emoji and repeated currency symbols, which screen readers cannot interpret.
 
-- Clean architecture
-- Readable code
-- Reusable components
-- Modern Android practices
-- Maintainable project structure
+---
 
-As the project evolves, additional features will continue to be implemented while preserving these architectural principles.
+## Running it
+
+```bash
+./gradlew installDebug     # build and install on a running emulator or device
+./gradlew testDebugUnitTest
+```
+
+No API key or configuration is required; the Wolt endpoints used are public.
